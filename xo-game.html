@@ -507,6 +507,7 @@ let scores = {X:0, O:0, D:0};
 let mode = 'pvp';
 let lang = 'hy';
 let lastResult = null;
+let lastMove = null;
 const HUMAN = 'X';
 const COMPUTER = 'O';
 
@@ -664,6 +665,7 @@ function beginGame(m){
   current = 'X';
   over = false;
   lastResult = null;
+  lastMove = null;
   scores = {X:0, O:0, D:0};
   updateScores();
   render();
@@ -675,14 +677,14 @@ const WIN_LINES = [
   [0,4,8],[2,4,6]
 ];
 
-function xSvg(animate){
-  return `<svg viewBox="0 0 100 100" class="mark-x ${animate?'':'ghost'}">
+function xSvg(ghost, animate){
+  return `<svg viewBox="0 0 100 100" class="mark-x ${ghost?'ghost':''}">
     <path class="${animate?'draw':''}" d="M20,20 L80,80"/>
     <path class="${animate?'draw':''}" d="M80,20 L20,80" style="animation-delay:0.1s"/>
   </svg>`;
 }
-function oSvg(animate){
-  return `<svg viewBox="0 0 100 100" class="mark-o ${animate?'':'ghost'}">
+function oSvg(ghost, animate){
+  return `<svg viewBox="0 0 100 100" class="mark-o ${ghost?'ghost':''}">
     <path class="${animate?'draw':''}" d="M50,15 A35,35 0 1,1 49.9,15" />
   </svg>`;
 }
@@ -693,9 +695,10 @@ function render(winLine){
     const cell = document.createElement('button');
     cell.className = 'cell' + (val ? ' filled' : '');
     if(winLine && winLine.includes(i)) cell.classList.add('win-cell');
-    if(val === 'X') cell.innerHTML = xSvg(true);
-    else if(val === 'O') cell.innerHTML = oSvg(true);
-    else if(!over) cell.innerHTML = current === 'X' ? xSvg(false) : oSvg(false);
+    const justMoved = i === lastMove;
+    if(val === 'X') cell.innerHTML = xSvg(false, justMoved);
+    else if(val === 'O') cell.innerHTML = oSvg(false, justMoved);
+    else if(!over) cell.innerHTML = current === 'X' ? xSvg(true, false) : oSvg(true, false);
     cell.addEventListener('click', () => handleMove(i));
     grid.appendChild(cell);
   });
@@ -721,6 +724,7 @@ function handleMove(i){
 
 function applyMove(i){
   board[i] = current;
+  lastMove = i;
   const win = checkWin();
   if(win){
     over = true;
@@ -878,6 +882,7 @@ resetBtn.addEventListener('click', () => {
   current = 'X';
   over = false;
   lastResult = null;
+  lastMove = null;
   render();
 });
 
