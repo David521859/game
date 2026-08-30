@@ -664,6 +664,8 @@ function beginGame(m){
   current = 'X';
   over = false;
   lastResult = null;
+  scores = {X:0, O:0, D:0};
+  updateScores();
   render();
 }
 
