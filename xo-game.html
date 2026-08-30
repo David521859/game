@@ -347,7 +347,65 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .blob, .start-btn, .cell, .win-line, .confetti-piece{ animation: none !important; }
+    .blob, .start-btn, .cell, .win-line, .confetti-piece, .card.shake, .scare-emoji{ animation: none !important; }
+  }
+
+  @keyframes screenShake{
+    0%,100%{ transform: translate(0,0) rotate(0); }
+    10%{ transform: translate(-7px,-4px) rotate(-1deg); }
+    20%{ transform: translate(7px,4px) rotate(1deg); }
+    30%{ transform: translate(-7px,3px) rotate(-1deg); }
+    40%{ transform: translate(7px,-3px) rotate(1deg); }
+    50%{ transform: translate(-5px,3px) rotate(-0.5deg); }
+    60%{ transform: translate(5px,-2px) rotate(0.5deg); }
+    70%{ transform: translate(-3px,2px); }
+    80%{ transform: translate(3px,-1px); }
+    90%{ transform: translate(-2px,1px); }
+  }
+  .card.shake{ animation: screenShake 0.5s ease; }
+
+  .scare-overlay{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    background: radial-gradient(circle at center, rgba(130,0,45,0.55), rgba(5,0,15,0.88));
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    pointer-events:none;
+    opacity:0;
+    animation: scareFlash 1.3s ease forwards;
+  }
+  @keyframes scareFlash{
+    0%{ opacity:0; }
+    12%{ opacity:1; }
+    78%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+  .scare-emoji{
+    font-size: 4.6rem;
+    filter: drop-shadow(0 0 30px rgba(255,60,90,0.9));
+    animation: scarePop 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes scarePop{
+    0%{ transform: scale(0.3) rotate(-10deg); }
+    55%{ transform: scale(1.18) rotate(5deg); }
+    75%{ transform: scale(0.94) rotate(-2deg); }
+    100%{ transform: scale(1) rotate(0); }
+  }
+  .scare-text{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 18px rgba(255,60,90,0.85);
+    text-align:center;
+    padding: 0 24px;
+    max-width: 380px;
   }
 
   .lang-switcher{
@@ -581,6 +639,27 @@ const translations = {
   }
 };
 
+const taunts = {
+  hy: ['Բու՜հ! 👻 Կրկին պարտվեցիր!', 'Ես տեսնում եմ ամեն քո քայլը... 🤖', 'Դու երբեք ինձ չես հաղթի 😈', 'Հա-հա! Այս անգամ էլ ես հաղթեցի 💀', 'Մեքենան միշտ խաղում ա հաղթելու համար 🔥'],
+  ru: ['Бу! 👻 Опять проиграл!', 'Я вижу каждый твой ход... 🤖', 'Тебе меня не победить 😈', 'Ха-ха! И снова я выиграл 💀', 'Машина всегда играет на победу 🔥'],
+  en: ['Boo! 👻 Beaten again!', 'I see your every move... 🤖', 'You can never beat me 😈', 'Ha-ha! I win again 💀', 'The machine always plays to win 🔥']
+};
+
+function triggerScare(){
+  const pool = taunts[lang];
+  const phrase = pool[Math.floor(Math.random() * pool.length)];
+  const overlay = document.createElement('div');
+  overlay.className = 'scare-overlay';
+  overlay.innerHTML = `<div class="scare-emoji">🤖</div><div class="scare-text">${phrase}</div>`;
+  document.body.appendChild(overlay);
+  const card = document.querySelector('.card');
+  card.classList.add('shake');
+  setTimeout(() => {
+    overlay.remove();
+    card.classList.remove('shake');
+  }, 1300);
+}
+
 const langSwitcher = document.getElementById('langSwitcher');
 const mainTitle = document.getElementById('mainTitle');
 const chooseModeText = document.getElementById('chooseModeText');
@@ -737,6 +816,7 @@ function applyMove(i){
     if(mode !== 'pvp'){
       lastResult = { type: current === HUMAN ? 'youWin' : 'computerWin' };
       statusEl.textContent = current === HUMAN ? t.youWin : t.computerWin;
+      if(current === COMPUTER) triggerScare();
     } else {
       lastResult = { type: 'pvpWin', player: current };
       statusEl.innerHTML = `<span class="turn-${current.toLowerCase()}">${current}</span>${t.winSuffix}`;
