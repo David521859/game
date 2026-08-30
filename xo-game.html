@@ -508,6 +508,7 @@ let mode = 'pvp';
 let lang = 'hy';
 let lastResult = null;
 let lastMove = null;
+let autoRestartTimer = null;
 const HUMAN = 'X';
 const COMPUTER = 'O';
 
@@ -651,12 +652,14 @@ diffHardBtn.addEventListener('click', () => beginGame('hard'));
 changeModeBtn.addEventListener('click', showStartScreen);
 
 function showStartScreen(){
+  clearTimeout(autoRestartTimer);
   diffOptions.classList.remove('show');
   gameScreen.style.display = 'none';
   startScreen.style.display = 'block';
 }
 
 function beginGame(m){
+  clearTimeout(autoRestartTimer);
   mode = m;
   subtitleEl.textContent = translations[lang].subtitle[m];
   startScreen.style.display = 'none';
@@ -741,6 +744,8 @@ function applyMove(i){
     render(win);
     drawWinLine(win);
     launchConfetti(current === 'X' ? '#ff7a9c' : '#29e0ff');
+    clearTimeout(autoRestartTimer);
+    autoRestartTimer = setTimeout(startNewRound, 2000);
     return;
   }
   if(board.every(c => c)){
@@ -750,9 +755,20 @@ function applyMove(i){
     lastResult = { type: 'draw' };
     statusEl.textContent = translations[lang].draw;
     render();
+    clearTimeout(autoRestartTimer);
+    autoRestartTimer = setTimeout(startNewRound, 2000);
     return;
   }
   current = current === 'X' ? 'O' : 'X';
+  render();
+}
+
+function startNewRound(){
+  board = Array(9).fill(null);
+  current = 'X';
+  over = false;
+  lastResult = null;
+  lastMove = null;
   render();
 }
 
@@ -878,12 +894,8 @@ function launchConfetti(color){
 }
 
 resetBtn.addEventListener('click', () => {
-  board = Array(9).fill(null);
-  current = 'X';
-  over = false;
-  lastResult = null;
-  lastMove = null;
-  render();
+  clearTimeout(autoRestartTimer);
+  startNewRound();
 });
 
 setLang('hy');
